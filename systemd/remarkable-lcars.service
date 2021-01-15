@@ -1,0 +1,12 @@
+[Unit]
+Description=Generates dynamic LCARS suspend screens
+Wants=remarkable-lcars.timer
+
+[Service]
+Type=oneshot
+ExecStartPre=/opt/bin/rm -f /tmp/remarkable-lcars-weather.json
+ExecStart=/opt/bin/remarkable-lcars /usr/share/remarkable/suspended.png
+ExecStartPost=/bin/systemctl restart xochitl
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Generates dynamic LCARS suspend screens
+Requires=remarkable-lcars.service
+
+[Timer]
+Unit=remarkable-lcars.service
+OnCalendar=*-*-* 14:00:00
+
+[Install]
+WantedBy=timers.target
