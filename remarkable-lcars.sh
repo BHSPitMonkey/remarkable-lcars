@@ -12,7 +12,14 @@ set -o nounset
 set -o pipefail
 
 # Read config file
-. /opt/etc/remarkable-lcars.conf
+if [[ -f /opt/etc/remarkable-lcars.conf ]]; then
+  . /opt/etc/remarkable-lcars.conf
+elif [[ -f .remarkable-lcars.conf ]]; then
+  . .remarkable-lcars.conf
+else
+  echo "Config file not found. Exiting."
+  exit 1
+fi
 
 # Internal configuration
 PATH="/opt/bin:/opt/sbin:$PATH"
@@ -69,7 +76,10 @@ function get_random_image() {
   echo "${ASSETS_DIR}/img0${num}.png"
 }
 
-wait_for_network
+# Wait for the network to come up, if we're on the reMarkable device
+if [[ "$(hostname)" == "reMarkable" ]]; then
+  wait_for_network
+fi
 
 # Fetch weather data, if not already cached
 if [[ ! -f "$WEATHER_JSON_PATH" ]]; then
@@ -91,37 +101,42 @@ DATE=$(date "+%A, %B %d (%T)")
 STARDATE=$(( ( RANDOM % 10000 )  + 1000 )).$((RANDOM % 9))
 
 # Render the image
+DATES_Y=220
+WEATHER_X=340
+WEATHER_X_TEMPS=$((WEATHER_X + 120))
+WEATHER_X_DAY=$((WEATHER_X + 15))
+WEATHER_X_SPACING=200
 convert "${ASSETS_DIR}/bg.png" \
   -font "${ASSETS_DIR}/fonts/Okuda.otf" \
   -fill white \
   -pointsize 36 \
-  -draw "text 525,220 '${DATE^^}'" \
-  -draw "text 1000,220 '$STARDATE'" \
+  -draw "text 525,$DATES_Y '${DATE^^}'" \
+  -draw "text 1000,$DATES_Y '$STARDATE'" \
   -pointsize 24 \
-  -draw "text 355,435 '$day_0_day'" \
-  -draw "text 555,435 '$day_1_day'" \
-  -draw "text 755,435 '$day_2_day'" \
-  -draw "text 955,435 '$day_3_day'" \
+  -draw "text $((WEATHER_X_DAY + (WEATHER_X_SPACING * 0))),435 '$day_0_day'" \
+  -draw "text $((WEATHER_X_DAY + (WEATHER_X_SPACING * 1))),435 '$day_1_day'" \
+  -draw "text $((WEATHER_X_DAY + (WEATHER_X_SPACING * 2))),435 '$day_2_day'" \
+  -draw "text $((WEATHER_X_DAY + (WEATHER_X_SPACING * 3))),435 '$day_3_day'" \
   -pointsize 52 \
-  -draw "text 460,380 '$day_0_hi°F'" \
-  -draw "text 660,380 '$day_1_hi°F'" \
-  -draw "text 860,380 '$day_2_hi°F'" \
-  -draw "text 1060,380 '$day_3_hi°F'" \
+  -draw "text $((WEATHER_X_TEMPS + (WEATHER_X_SPACING * 0))),380 '$day_0_hi°F'" \
+  -draw "text $((WEATHER_X_TEMPS + (WEATHER_X_SPACING * 1))),380 '$day_1_hi°F'" \
+  -draw "text $((WEATHER_X_TEMPS + (WEATHER_X_SPACING * 2))),380 '$day_2_hi°F'" \
+  -draw "text $((WEATHER_X_TEMPS + (WEATHER_X_SPACING * 3))),380 '$day_3_hi°F'" \
   \
   -fill blue \
   -pointsize 36 \
-  -draw "text 355,220 'EARTH DATE'" \
-  -draw "text 850,220 'STARDATE'" \
+  -draw "text 355,$DATES_Y 'EARTH DATE'" \
+  -draw "text 850,$DATES_Y 'STARDATE'" \
   -pointsize 52 \
-  -draw "text 460,430 '$day_0_lo°F'" \
-  -draw "text 660,430 '$day_1_lo°F'" \
-  -draw "text 860,430 '$day_2_lo°F'" \
-  -draw "text 1060,430 '$day_3_lo°F'" \
+  -draw "text $((WEATHER_X_TEMPS + (WEATHER_X_SPACING * 0))),430 '$day_0_lo°F'" \
+  -draw "text $((WEATHER_X_TEMPS + (WEATHER_X_SPACING * 1))),430 '$day_1_lo°F'" \
+  -draw "text $((WEATHER_X_TEMPS + (WEATHER_X_SPACING * 2))),430 '$day_2_lo°F'" \
+  -draw "text $((WEATHER_X_TEMPS + (WEATHER_X_SPACING * 3))),430 '$day_3_lo°F'" \
   \
-  -draw "image SrcOver 340,310 120,120 '$day_0_icon'" \
-  -draw "image SrcOver 540,310 120,120 '$day_1_icon'" \
-  -draw "image SrcOver 740,310 120,120 '$day_2_icon'" \
-  -draw "image SrcOver 940,310 120,120 '$day_3_icon'" \
+  -draw "image SrcOver $((WEATHER_X + (WEATHER_X_SPACING * 0))),310 120,120 '$day_0_icon'" \
+  -draw "image SrcOver $((WEATHER_X + (WEATHER_X_SPACING * 1))),310 120,120 '$day_1_icon'" \
+  -draw "image SrcOver $((WEATHER_X + (WEATHER_X_SPACING * 2))),310 120,120 '$day_2_icon'" \
+  -draw "image SrcOver $((WEATHER_X + (WEATHER_X_SPACING * 3))),310 120,120 '$day_3_icon'" \
   \
   $(get_random_image) -composite \
   "$INTERMEDIATE_OUTPUT_PATH"
