@@ -1,5 +1,7 @@
 [Unit]
 Description=Generates dynamic LCARS suspend screens
+After=network-online.target
+Wants=network-online.target
 Wants=remarkable-lcars.timer
 
 [Service]
